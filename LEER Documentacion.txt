@@ -1,0 +1,99 @@
+ExamenBeClever resuelto:
+
+Models:
+Questa API esta conformada por 4 clases models; Empleado,Registro y BusinessLocation  y una clase Context.
+
+Empleado es una clase básica que contiene los atributos de Id,nombre apellido y género.
+
+Por otro lado BusinessLocation(referencia a los lugares donde estarían distribuidos los locales) además de los atributos nomrlaes como País, Estado, Ciudad, Dirección tiene una collection del tipo ICollection<Empleado>
+
+Mientras que la clase Registro, además las variables IdRegistro y tipoRegistro(ingreso o egreso) tiene un IdEmpleado y una variable de tipo Empleado, a su vez un IdBusinessLocation y una variable de tipo BusinessLocation
+
+El esquema utilizado fue el CodeFirst,  es por esta razón que existen las variables mencionadas anteriormente. Por lo tanto,  un registro se conforma de una serie de empleados y businesslocations
+
+----------------------------------------------------------------
+
+Mapeo
+
+Esta carpeta contiene una clase llamada EntityMapper que contiene la lógica correspondiente para hacer uso de las entidadesDTO; en este caso nuestra clase Registro se convierte en una clase RegistroDTO y viceversa. De esta manera nos evitamos enviar y recibir información innecesaria tanto desde o hacia el front o el back.
+
+----------------------------------------------------------------
+Entities-DTO
+
+Esta carpeta contiene como se mencionó en el apartado anterior una clase de tipo RegistroDTO. Pero a su vez contiene una clase RegistroDTO la cual, si bien no es utilizada para realizar mapeo alguno, si es utilizada para crear un objeto de tipo Json cuando en la correspondiente función Registro( que veremos más adelante) nos pide un Promedio.
+
+----------------------------------------------------------------
+
+Servicios
+
+Aquí encontraremos las inyecciones de dependencia que estamos configurando en nuestra clase Program.cs que veremos que nuestra capa de lógica de negocios (BusinessLayer=BL) implementará en su constructor para tener una conexión directa con las tablas de las bbdd.
+
+----------------------------------------------------------------
+
+Migrations
+
+Aquí tenemos toda la lógica de las migraciones hechas a través de CodeFirst
+
+----------------------------------------------------------------
+
+BusinessLayer
+RegistrosBL.
+
+aquí tenemos toda la magia que ocurre detrás de cada método del controller. Es decir esta clase es la intermediaria entre el controlador y el servicio. Esta clase es invocada desde el controlador y tiene acceso a los servicios con las inyecciones de dependencia configuradas previamente en la clase Program.Cs (net core 6.0)
+
+Nuestra capa de negocios tiene un constructor que debe recibir por parámetros las interfaces de los servicios mencionados arriba y una clase context.
+La clase registroController al ser inicializada al ejecutar el programa recibe por inyecciones de dependencia estos servicios que son después pasados a la variable de tipo BL en su constructor
+----------------------------------------------------------------
+Controllers 
+ registroController
+
+El constructor recibe las inyecciones de dependencia e inicializa la clase de BL
+
+
+guardarRegistro: Protocolo post, debemos mandar un objeto de tipo RegistroDTO que es similar a Registro pero con los únicos datos importantes para ser visualizados por pantalla al ser ingresados; el id del empleado, el id del local, el tipo de registro(ingreso o egreso) y una fecha. Esta clase llama a la capa de negocios y ejecuta el método de Register el cual llama al servicio de Registros y mendiante entityframework guarda un registro en la tabla Registro y luego guarda el progreso... simple
+
+
+MostrarRegistros: invoca todos los registros que son pasados a traves de un objeto Json.
+
+
+Search: este método recibe a traves de swagger o Postman muchas variables; el Id del local, el tipo de registro,  una fecha desde y una fecha hasta, un nombre y un apellido los cuales pueden ser nulos.
+Luego en la BL el método del mismo nombre  primero nos guardamos en una lista (var registros) todos los registros que correspondan al local pasado por parámetro y específicamente los registros de ingreso o egreso según hayamos especificado.
+
+Luego si es que pasamos algun dato de fecha desde o fecha hasta porque el que ejecuta el servicio puede decidirse en no especificar un rango de fecha, nuestra lista creada anteriormente ahora también tiene como filtro que tengamos registros dados entre esas fechas.
+
+Si decidimos pasar un nombre o apellido se hara el mismo filtro por nombre o apellido o ambos en un metodo privado llamado NameFilter
+
+Luego devolvemos una lista de los registrosDTO en vez de un Registro ya que este contiene información innecesaria para el cliente.
+
+
+Average: funcion que nos devuelve un objeto PromedioDTO que mencionamos mas arriba, con el promedio de los hombres y mujeres tanto de egresos e ingresos en un rango de fecha y distruibuido por locales. 
+
+Al llamar a la clase BL primero calculamos el total de meses entre las fechas dadas como parametros. 
+
+Posteriormente nos cargamos la lista de locales. Luego nos traemos el total de empleados hombres y mujeres en dos respectivas variables
+
+creamos 4 listas:
+
+2 de egresos y 2 de ingresos (hombres y mujeres respectivamente)
+
+Recorremos con un For Eeach la lista de locales cargada anteriormente y procedemos a taernos los registros que sean de tipo Ingreso y en el local que estemos recorriendo en el foreach
+
+Luego por cada registro de tipo ingreso que estemos recorriendo, si ese registro contiene un IdEmpleado que sea de un hombre, entonces lo agregamos la lista de Ingresos de hombres. Lo mismo con las mujeres
+
+Repetimos el paso anterior pero para una lista de EGRESOS tanto de hombres como mujeres. 
+
+En las ultimas linea de código estaremos cargando una lista de PromedioDTO la cual se mostrará por pantalla
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
